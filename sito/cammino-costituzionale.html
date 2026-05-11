@@ -1,0 +1,1340 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title>Cammino Costituzionale</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: #1a0a00;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            font-family: 'Crimson Text', serif;
+            overflow: hidden;
+        }
+
+        #game-wrapper {
+            position: relative;
+            width: 900px;
+        }
+
+        #hud {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(135deg, #0a3d0a, #1a5c1a);
+            border: 3px solid #c8a000;
+            border-bottom: none;
+            padding: 8px 20px;
+            color: #f5e6c8;
+        }
+
+        #hud .hud-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        #hud .articles-display {
+            font-family: 'Cinzel', serif;
+            font-size: 13px;
+            color: #ffd700;
+            letter-spacing: 1px;
+        }
+
+        #hud .level-name {
+            font-family: 'Cinzel', serif;
+            font-size: 14px;
+            font-weight: 700;
+            color: #ffd700;
+            text-align: center;
+        }
+
+        #hud .lives-display {
+            font-size: 18px;
+        }
+
+        canvas {
+            display: block;
+            border: 3px solid #c8a000;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+
+        #bottom-bar {
+            background: linear-gradient(135deg, #8b0000, #6b0000);
+            border: 3px solid #c8a000;
+            border-top: none;
+            padding: 6px 20px;
+            display: flex;
+            justify-content: space-between;
+            color: #f5e6c8;
+            font-size: 12px;
+            font-family: 'Cinzel', serif;
+            letter-spacing: 1px;
+        }
+
+        /* OVERLAY SCREENS */
+        .overlay {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            pointer-events: all;
+        }
+
+        #start-screen {
+            background: radial-gradient(ellipse at center, #1a3a1a 0%, #0a1a0a 60%, #000 100%);
+        }
+
+        #start-screen .title-main {
+            font-family: 'Cinzel', serif;
+            font-size: 52px;
+            font-weight: 900;
+            color: #ffd700;
+            text-shadow: 0 0 30px rgba(255,215,0,0.5), 3px 3px 0 #8b6000;
+            letter-spacing: 4px;
+            text-align: center;
+            line-height: 1.1;
+        }
+
+        #start-screen .title-sub {
+            font-family: 'Crimson Text', serif;
+            font-size: 22px;
+            color: #f5e6c8;
+            margin: 10px 0 40px;
+            letter-spacing: 3px;
+            opacity: 0.8;
+        }
+
+        .tricolore-bar {
+            width: 400px;
+            height: 8px;
+            background: linear-gradient(to right, #009246 33.3%, #ffffff 33.3%, #ffffff 66.6%, #ce2b37 66.6%);
+            margin: 15px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        }
+
+        .start-btn {
+            background: linear-gradient(135deg, #8b0000, #c00000);
+            color: #ffd700;
+            border: 3px solid #ffd700;
+            padding: 14px 50px;
+            font-family: 'Cinzel', serif;
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 3px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 20px;
+            text-transform: uppercase;
+        }
+
+        .start-btn:hover {
+            background: linear-gradient(135deg, #c00000, #ff0000);
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(255,215,0,0.4);
+        }
+
+        .controls-info {
+            color: #a0c0a0;
+            font-size: 14px;
+            margin-top: 20px;
+            text-align: center;
+            line-height: 1.8;
+            font-family: 'Crimson Text', serif;
+        }
+
+        /* MODAL QUIZ/INFO */
+        #modal-overlay {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.75);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+        }
+
+        #modal-box {
+            background: linear-gradient(160deg, #1e3a1e, #0d200d);
+            border: 3px solid #c8a000;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            position: relative;
+        }
+
+        #modal-box::before {
+            content: '';
+            position: absolute;
+            top: 5px; left: 5px; right: 5px; bottom: 5px;
+            border: 1px solid rgba(200, 160, 0, 0.3);
+            pointer-events: none;
+        }
+
+        #modal-type-badge {
+            font-family: 'Cinzel', serif;
+            font-size: 11px;
+            letter-spacing: 3px;
+            color: #c8a000;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        #modal-title {
+            font-family: 'Cinzel', serif;
+            font-size: 22px;
+            font-weight: 700;
+            color: #ffd700;
+            margin-bottom: 12px;
+            text-shadow: 1px 1px 0 #5a3a00;
+        }
+
+        #modal-content {
+            color: #e8d8b0;
+            font-size: 16px;
+            line-height: 1.7;
+            margin-bottom: 20px;
+            font-style: italic;
+        }
+
+        /* Quiz styles */
+        #quiz-question {
+            color: #f0e8cc;
+            font-size: 17px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+
+        .quiz-option {
+            display: block;
+            width: 100%;
+            background: rgba(0,50,0,0.5);
+            border: 2px solid #3a6a3a;
+            color: #d0e8d0;
+            padding: 10px 15px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            font-family: 'Crimson Text', serif;
+            font-size: 15px;
+            text-align: left;
+            transition: all 0.15s;
+        }
+
+        .quiz-option:hover {
+            background: rgba(0,100,0,0.5);
+            border-color: #ffd700;
+            color: #ffd700;
+        }
+
+        .quiz-option.correct {
+            background: rgba(0,150,0,0.4);
+            border-color: #00ff88;
+            color: #00ff88;
+        }
+
+        .quiz-option.wrong {
+            background: rgba(150,0,0,0.4);
+            border-color: #ff4444;
+            color: #ff4444;
+        }
+
+        #modal-continue-btn {
+            background: linear-gradient(135deg, #4a8a00, #2a6a00);
+            color: #ffd700;
+            border: 2px solid #ffd700;
+            padding: 10px 30px;
+            font-family: 'Cinzel', serif;
+            font-size: 14px;
+            letter-spacing: 2px;
+            cursor: pointer;
+            display: none;
+            margin-top: 10px;
+        }
+
+        #modal-continue-btn:hover {
+            background: linear-gradient(135deg, #6aaa00, #4a8a00);
+        }
+
+        /* LEVEL COMPLETE */
+        #level-complete {
+            background: radial-gradient(ellipse at center, #2a4a00 0%, #0a1a00 100%);
+        }
+
+        #level-complete h2 {
+            font-family: 'Cinzel', serif;
+            font-size: 40px;
+            color: #ffd700;
+            text-shadow: 0 0 20px rgba(255,215,0,0.6);
+            margin-bottom: 10px;
+        }
+
+        #level-complete p {
+            color: #c8e8a0;
+            font-size: 18px;
+            margin-bottom: 30px;
+        }
+
+        /* GAME OVER */
+        #game-over {
+            background: radial-gradient(ellipse at center, #4a0000 0%, #1a0000 100%);
+        }
+
+        #game-over h2 {
+            font-family: 'Cinzel', serif;
+            font-size: 40px;
+            color: #ff4444;
+            text-shadow: 0 0 20px rgba(255,0,0,0.5);
+        }
+
+        /* WIN */
+        #win-screen {
+            background: radial-gradient(ellipse at center, #2a3a0a 0%, #0a1a00 100%);
+        }
+
+        #win-screen h2 {
+            font-family: 'Cinzel', serif;
+            font-size: 36px;
+            color: #ffd700;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        #win-screen p {
+            color: #c8e8a0;
+            font-size: 16px;
+            text-align: center;
+            max-width: 400px;
+            line-height: 1.7;
+            margin-bottom: 20px;
+        }
+
+        .article-pill {
+            display: inline-block;
+            background: rgba(200,160,0,0.2);
+            border: 1px solid #c8a000;
+            color: #ffd700;
+            font-size: 11px;
+            font-family: 'Cinzel', serif;
+            padding: 3px 8px;
+            margin: 2px;
+            letter-spacing: 1px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-wrapper">
+    <div id="hud">
+        <div class="hud-section">
+            <span class="articles-display" id="articles-count">📜 Articoli: 0 / 12</span>
+        </div>
+        <div class="level-name" id="level-name">LIVELLO 1</div>
+        <div class="hud-section">
+            <span class="lives-display" id="lives-display">❤️❤️❤️</span>
+        </div>
+    </div>
+
+    <canvas id="gameCanvas" width="900" height="450"></canvas>
+
+    <div id="bottom-bar">
+        <span>← → Muovi &nbsp;|&nbsp; ↑ o SPAZIO Salta</span>
+        <span id="score-display">PUNTEGGIO: 0</span>
+        <span>ITALIA · 1946–1948</span>
+    </div>
+
+    <!-- START SCREEN -->
+    <div class="overlay" id="start-screen">
+        <div class="tricolore-bar"></div>
+        <div class="title-main">CAMMINO<br>COSTITUZIONALE</div>
+        <div class="title-sub">Il Gioco della Repubblica</div>
+        <div class="tricolore-bar"></div>
+        <div class="controls-info">
+            Scopri i Diritti e i Doveri dei Cittadini — Art. 13 a 54<br>
+            Supera gli ostacoli · Rispondi ai quiz · Diventa un cittadino consapevole
+        </div>
+        <button class="start-btn" onclick="startGame()">INIZIA IL GIOCO</button>
+        <div class="controls-info" style="margin-top:15px; font-size:12px; opacity:0.6;">
+            Frecce Direzionali / WASD · Spazio per saltare<br>
+            Toccate le piattaforme dorate per raccogliere articoli
+        </div>
+    </div>
+
+    <!-- MODAL INFO/QUIZ -->
+    <div id="modal-overlay">
+        <div id="modal-box">
+            <div id="modal-type-badge">PIETRA MILIARE</div>
+            <div id="modal-title">Titolo</div>
+            <div id="modal-content">Contenuto</div>
+            <div id="quiz-section" style="display:none">
+                <div id="quiz-question"></div>
+                <div id="quiz-options"></div>
+            </div>
+            <button id="modal-continue-btn" onclick="closeModal()">CONTINUA →</button>
+        </div>
+    </div>
+
+    <!-- LEVEL COMPLETE -->
+    <div class="overlay" id="level-complete" style="display:none">
+        <h2>⭐ LIVELLO SUPERATO!</h2>
+        <p id="level-complete-text">Ottimo lavoro!</p>
+        <button class="start-btn" onclick="nextLevel()">PROSSIMO LIVELLO →</button>
+    </div>
+
+    <!-- GAME OVER -->
+    <div class="overlay" id="game-over" style="display:none">
+        <h2>⚔️ GAME OVER</h2>
+        <p style="color:#f5e6c8; margin:15px 0 30px; font-size:18px;">La Costituzione ha bisogno di te ancora!</p>
+        <button class="start-btn" onclick="restartLevel()" style="background:linear-gradient(135deg,#8b0000,#c00000)">RIPROVA</button>
+    </div>
+
+    <!-- WIN SCREEN -->
+    <div class="overlay" id="win-screen" style="display:none">
+        <div class="tricolore-bar"></div>
+        <h2>🇮🇹 COSTITUZIONE COMPLETATA!</h2>
+        <p>Hai studiato 12 articoli fondamentali sui Diritti e Doveri<br>dei cittadini della Repubblica Italiana.<br><br>
+        <em>"Tutti i cittadini hanno il dovere di essere fedeli<br>alla Repubblica e di osservarne la Costituzione."</em><br><br>
+        Art. 54 — Costituzione della Repubblica Italiana, 1948</p>
+        <div id="collected-articles"></div>
+        <button class="start-btn" onclick="restartAll()" style="margin-top:20px">GIOCA ANCORA</button>
+        <div class="tricolore-bar" style="margin-top:20px"></div>
+    </div>
+</div>
+
+<script>
+// =============================================
+// GAME DATA
+// =============================================
+
+const LEVELS = [
+    {
+        name: "I — Libertà Personali (Art. 13–21)",
+        bg: { sky: '#87CEEB', ground: '#8B6914', accent: '#6a4a00' },
+        articles: [
+            {
+                id: 13, x: 280, y: 300,
+                title: "Articolo 13 — Libertà Personale",
+                text: "La libertà personale è inviolabile. Nessuno può essere arrestato o perquisito senza un'autorizzazione del giudice, tranne in caso di flagrante reato.",
+                quiz: {
+                    q: "Chi deve autorizzare un arresto secondo l'Art. 13?",
+                    options: ["Il Presidente della Repubblica", "Il giudice (Autorità giudiziaria)", "Il Ministro dell'Interno", "Il Sindaco"],
+                    correct: 1
+                }
+            },
+            {
+                id: 14, x: 560, y: 220,
+                title: "Articolo 14 — Domicilio",
+                text: "Il domicilio è inviolabile. Non si possono eseguire ispezioni, perquisizioni o sequestri in casa di qualcuno senza le garanzie previste dalla legge.",
+                quiz: {
+                    q: "Cosa afferma l'Art. 14 riguardo al domicilio?",
+                    options: ["È liberamente accessibile dalla polizia", "È inviolabile", "Può essere perquisito dal sindaco", "Non è tutelato dalla Costituzione"],
+                    correct: 1
+                }
+            },
+            {
+                id: 15, x: 820, y: 160,
+                title: "Articolo 15 — Libertà di Comunicazione",
+                text: "La libertà e la segretezza della corrispondenza e di ogni altra forma di comunicazione sono inviolabili. Le lettere e le telefonate non possono essere intercettate senza autorizzazione del giudice.",
+                quiz: {
+                    q: "Quando si possono intercettare comunicazioni private?",
+                    options: ["Mai, in nessun caso", "Solo con autorizzazione del giudice", "Su richiesta della polizia", "Con il permesso del governo"],
+                    correct: 1
+                }
+            },
+            {
+                id: 21, x: 1100, y: 290,
+                title: "Articolo 21 — Libertà di Pensiero",
+                text: "Tutti hanno diritto di manifestare liberamente il proprio pensiero con la parola, lo scritto e ogni altro mezzo. La stampa non può essere soggetta ad autorizzazioni o censure.",
+                quiz: {
+                    q: "Cosa vieta esplicitamente l'Art. 21 alla stampa?",
+                    options: ["Di pubblicare notizie false", "Autorizzazioni preventive e censure", "Di criticare il governo", "Di pubblicare foto"],
+                    correct: 1
+                }
+            }
+        ],
+        milestone: {
+            x: 1310, y: 295,
+            title: "Le Libertà Civili",
+            text: "Gli articoli 13-28 tutelano le libertà civili fondamentali: libertà personale, di domicilio, di comunicazione, di movimento e di pensiero. Sono nate in risposta alle leggi fasciste che le avevano soppresse.",
+            badge: "📚 LO SAPEVI?"
+        },
+        exit: { x: 1430, y: 265 },
+        platforms: [
+            { x: 0, y: 390, w: 2000, h: 60 },
+            { x: 200, y: 330, w: 120, h: 18 },
+            { x: 480, y: 255, w: 140, h: 18 },
+            { x: 740, y: 190, w: 140, h: 18 },
+            { x: 1010, y: 320, w: 130, h: 18 },
+            { x: 1210, y: 260, w: 150, h: 18 },
+            { x: 1400, y: 295, w: 120, h: 18 },
+        ],
+        enemies: [
+            { x: 400, baseX: 350, range: 100, speed: 1.2 },
+            { x: 900, baseX: 850, range: 120, speed: 1.5 },
+            { x: 1160, baseX: 1110, range: 80, speed: 1.8 },
+        ],
+        worldWidth: 1650
+    },
+    {
+        name: "II — Diritti Sociali (Art. 29–38)",
+        bg: { sky: '#6090C8', ground: '#5a3a10', accent: '#3a2000' },
+        articles: [
+            {
+                id: 29, x: 280, y: 300,
+                title: "Articolo 29 — La Famiglia",
+                text: "La Repubblica riconosce i diritti della famiglia come società naturale fondata sul matrimonio. Il matrimonio è basato sull'eguaglianza morale e giuridica dei coniugi.",
+                quiz: {
+                    q: "Su cosa si basa il matrimonio secondo l'Art. 29?",
+                    options: ["Sulla tradizione religiosa", "Sull'eguaglianza morale e giuridica dei coniugi", "Sul consenso dei genitori", "Sul benessere economico"],
+                    correct: 1
+                }
+            },
+            {
+                id: 32, x: 560, y: 215,
+                title: "Articolo 32 — Diritto alla Salute",
+                text: "La Repubblica tutela la salute come fondamentale diritto dell'individuo e interesse della collettività. Garantisce cure gratuite agli indigenti. Nessuno può essere obbligato a un trattamento sanitario.",
+                quiz: {
+                    q: "A chi garantisce cure gratuite l'Art. 32?",
+                    options: ["A tutti i cittadini", "Agli indigenti (persone senza risorse)", "Solo ai bambini", "Solo ai lavoratori"],
+                    correct: 1
+                }
+            },
+            {
+                id: 33, x: 840, y: 160,
+                title: "Articolo 33 — Istruzione e Arte",
+                text: "L'arte e la scienza sono libere e libero ne è l'insegnamento. La Repubblica detta le norme generali sull'istruzione. È istituito il diritto degli enti privati di aprire scuole.",
+                quiz: {
+                    q: "Cosa afferma l'Art. 33 su arte e scienza?",
+                    options: ["Sono controllate dallo Stato", "Sono libere e libero è il loro insegnamento", "Devono seguire un programma unico", "Sono riservate alle università"],
+                    correct: 1
+                }
+            },
+            {
+                id: 34, x: 1110, y: 290,
+                title: "Articolo 34 — Diritto allo Studio",
+                text: "La scuola è aperta a tutti. L'istruzione inferiore, impartita per almeno otto anni, è obbligatoria e gratuita. I capaci e meritevoli, anche se privi di mezzi, hanno diritto a raggiungere i gradi più alti degli studi.",
+                quiz: {
+                    q: "Per quanti anni è obbligatoria e gratuita l'istruzione secondo l'Art. 34?",
+                    options: ["5 anni", "8 anni", "10 anni", "13 anni"],
+                    correct: 1
+                }
+            }
+        ],
+        milestone: {
+            x: 1320, y: 285,
+            title: "I Diritti Sociali",
+            text: "Gli articoli 29-38 riguardano la famiglia, la salute, l'istruzione e il lavoro. Sono chiamati 'diritti sociali' perché richiedono allo Stato di intervenire attivamente per garantirli a tutti i cittadini.",
+            badge: "📚 LO SAPEVI?"
+        },
+        exit: { x: 1450, y: 250 },
+        platforms: [
+            { x: 0, y: 390, w: 2100, h: 60 },
+            { x: 200, y: 330, w: 120, h: 18 },
+            { x: 480, y: 250, w: 130, h: 18 },
+            { x: 750, y: 185, w: 130, h: 18 },
+            { x: 830, y: 315, w: 140, h: 18 },
+            { x: 1030, y: 255, w: 130, h: 18 },
+            { x: 1220, y: 320, w: 140, h: 18 },
+            { x: 1420, y: 250, w: 120, h: 18 },
+        ],
+        enemies: [
+            { x: 350, baseX: 300, range: 130, speed: 1.4 },
+            { x: 700, baseX: 650, range: 100, speed: 1.7 },
+            { x: 1000, baseX: 950, range: 150, speed: 2.0 },
+            { x: 1280, baseX: 1230, range: 100, speed: 1.9 },
+        ],
+        worldWidth: 1750
+    },
+    {
+        name: "III — Doveri dei Cittadini (Art. 48–54)",
+        bg: { sky: '#4a6a9a', ground: '#3a2a0a', accent: '#1a1000' },
+        articles: [
+            {
+                id: 48, x: 250, y: 310,
+                title: "Articolo 48 — Diritto di Voto",
+                text: "Sono elettori tutti i cittadini, uomini e donne, che hanno raggiunto la maggiore età. Il voto è personale ed eguale, libero e segreto. Il suo esercizio è dovere civico.",
+                quiz: {
+                    q: "Secondo l'Art. 48, il voto è...",
+                    options: ["Un privilegio per i più istruiti", "Personale, eguale, libero e segreto", "Obbligatorio per legge", "Riservato ai maschi adulti"],
+                    correct: 1
+                }
+            },
+            {
+                id: 52, x: 560, y: 235,
+                title: "Articolo 52 — Difesa della Patria",
+                text: "La difesa della Patria è sacro dovere del cittadino. Il servizio militare è obbligatorio nei limiti e modi stabiliti dalla legge. Il suo adempimento non pregiudica la posizione di lavoro del cittadino.",
+                quiz: {
+                    q: "Come definisce l'Art. 52 la difesa della Patria?",
+                    options: ["Un diritto facoltativo", "Un sacro dovere del cittadino", "Un compito solo dei militari di professione", "Una scelta personale"],
+                    correct: 1
+                }
+            },
+            {
+                id: 53, x: 860, y: 165,
+                title: "Articolo 53 — Dovere Fiscale",
+                text: "Tutti sono tenuti a concorrere alle spese pubbliche in ragione della loro capacità contributiva. Il sistema tributario è informato a criteri di progressività: chi guadagna di più, paga di più.",
+                quiz: {
+                    q: "Cosa significa 'progressività' del sistema fiscale (Art. 53)?",
+                    options: ["Tutti pagano la stessa cifra", "Chi guadagna di più paga proporzionalmente di più", "Solo i ricchi pagano le tasse", "Le tasse aumentano ogni anno"],
+                    correct: 1
+                }
+            },
+            {
+                id: 54, x: 1150, y: 285,
+                title: "Articolo 54 — Fedeltà alla Repubblica",
+                text: "Tutti i cittadini hanno il dovere di essere fedeli alla Repubblica e di osservarne la Costituzione e le leggi. I cittadini cui sono affidate funzioni pubbliche hanno il dovere di adempierle con disciplina e onore.",
+                quiz: {
+                    q: "Cosa devono fare i cittadini con funzioni pubbliche secondo l'Art. 54?",
+                    options: ["Seguire solo le direttive del partito", "Adempiere le loro funzioni con disciplina e onore", "Obbedire solo al Presidente", "Agire nel proprio interesse"],
+                    correct: 1
+                }
+            }
+        ],
+        milestone: {
+            x: 1360, y: 255,
+            title: "Diritti E Doveri",
+            text: "La Costituzione non garantisce solo diritti: impone anche doveri. Pagare le tasse, votare, rispettare le leggi e difendere la Patria sono obblighi di ogni cittadino. Diritti e doveri sono due facce della stessa medaglia.",
+            badge: "⚖️ DIRITTI & DOVERI"
+        },
+        exit: { x: 1510, y: 220 },
+        platforms: [
+            { x: 0, y: 390, w: 2200, h: 60 },
+            { x: 175, y: 345, w: 110, h: 18 },
+            { x: 470, y: 268, w: 120, h: 18 },
+            { x: 700, y: 192, w: 120, h: 18 },
+            { x: 785, y: 330, w: 140, h: 18 },
+            { x: 1060, y: 250, w: 130, h: 18 },
+            { x: 1245, y: 190, w: 140, h: 18 },
+            { x: 1440, y: 250, w: 110, h: 18 },
+            { x: 1510, y: 190, w: 130, h: 18 },
+        ],
+        enemies: [
+            { x: 320, baseX: 270, range: 140, speed: 1.6 },
+            { x: 620, baseX: 570, range: 110, speed: 1.9 },
+            { x: 920, baseX: 870, range: 130, speed: 2.2 },
+            { x: 1200, baseX: 1150, range: 120, speed: 2.3 },
+            { x: 1390, baseX: 1340, range: 90, speed: 2.5 },
+        ],
+        worldWidth: 1900
+    }
+];
+
+// =============================================
+// GAME STATE
+// =============================================
+
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+let gameState = 'start';
+let currentLevel = 0;
+let score = 0;
+let lives = 3;
+let totalArticlesCollected = [];
+let camera = { x: 0 };
+let particles = [];
+let animFrame = 0;
+
+// Player
+const player = {
+    x: 80, y: 300,
+    w: 24, h: 30,
+    dx: 0, dy: 0,
+    grounded: false,
+    facingRight: true,
+    jumpForce: 13,
+    speed: 4.5,
+    invincible: 0,
+    animFrame: 0,
+    animTimer: 0,
+    collected: [],       // article ids collected THIS level
+    milestoneTriggered: false
+};
+
+// Level state
+let levelArticles = [];
+let levelEnemies = [];
+
+const keys = {};
+window.addEventListener('keydown', e => { keys[e.code] = true; e.preventDefault(); });
+window.addEventListener('keyup', e => { keys[e.code] = false; });
+
+// =============================================
+// INIT
+// =============================================
+
+function startGame() {
+    document.getElementById('start-screen').style.display = 'none';
+    currentLevel = 0;
+    score = 0;
+    lives = 3;
+    totalArticlesCollected = [];
+    loadLevel(0);
+    gameState = 'playing';
+    requestAnimationFrame(loop);
+}
+
+function loadLevel(idx) {
+    const lv = LEVELS[idx];
+    player.x = 80;
+    player.y = 300;
+    player.dx = 0;
+    player.dy = 0;
+    player.collected = [];
+    player.milestoneTriggered = false;
+    camera.x = 0;
+    particles = [];
+
+    levelArticles = lv.articles.map(a => ({ ...a, collected: false }));
+    levelEnemies = lv.enemies.map(e => ({ ...e, dir: 1, y: 350 }));
+
+    document.getElementById('level-name').textContent = lv.name;
+    updateHUD();
+}
+
+// =============================================
+// GAME LOOP
+// =============================================
+
+function loop() {
+    if (gameState !== 'playing') return;
+    update();
+    draw();
+    animFrame++;
+    requestAnimationFrame(loop);
+}
+
+function update() {
+    const lv = LEVELS[currentLevel];
+
+    // Input
+    const moveLeft = keys['ArrowLeft'] || keys['KeyA'];
+    const moveRight = keys['ArrowRight'] || keys['KeyD'];
+    const jump = keys['ArrowUp'] || keys['KeyW'] || keys['Space'];
+
+    if (moveLeft) { player.dx = -player.speed; player.facingRight = false; }
+    else if (moveRight) { player.dx = player.speed; player.facingRight = true; }
+    else player.dx *= 0.7;
+
+    if (jump && player.grounded) {
+        player.dy = -player.jumpForce;
+        player.grounded = false;
+        spawnParticles(player.x + player.w/2, player.y + player.h, '#c8a000', 6);
+    }
+
+    // Gravity
+    player.dy = Math.min(player.dy + 0.65, 18);
+    player.x += player.dx;
+    player.y += player.dy;
+
+    // World bounds
+    player.x = Math.max(0, Math.min(player.x, lv.worldWidth - player.w));
+
+    // Platform collisions
+    player.grounded = false;
+    lv.platforms.forEach(p => {
+        if (player.x < p.x + p.w && player.x + player.w > p.x &&
+            player.y + player.h > p.y && player.y + player.h < p.y + p.h + 15 && player.dy >= 0) {
+            player.grounded = true;
+            player.dy = 0;
+            player.y = p.y - player.h;
+        }
+    });
+
+    // Fall death
+    if (player.y > 500) {
+        takeDamage();
+        return;
+    }
+
+    // Camera
+    const targetCamX = player.x - 300;
+    camera.x += (targetCamX - camera.x) * 0.1;
+    camera.x = Math.max(0, Math.min(camera.x, lv.worldWidth - 900));
+
+    // Article collection
+    levelArticles.forEach(art => {
+        if (!art.collected &&
+            Math.abs(player.x + player.w/2 - art.x - 15) < 30 &&
+            Math.abs(player.y + player.h/2 - art.y - 15) < 40) {
+            art.collected = true;
+            player.collected.push(art.id);
+            totalArticlesCollected.push(art.id);
+            score += 100;
+            spawnParticles(art.x, art.y, '#ffd700', 15);
+            showModal('article', art);
+        }
+    });
+
+    // Milestone
+    const ms = lv.milestone;
+    if (!player.milestoneTriggered &&
+        Math.abs(player.x + player.w/2 - ms.x - 20) < 40 &&
+        player.y + player.h > ms.y - 5) {
+        player.milestoneTriggered = true;
+        score += 200;
+        showModal('milestone', ms);
+    }
+
+    // Exit
+    const ex = lv.exit;
+    if (player.x + player.w/2 > ex.x - 20 && player.x + player.w/2 < ex.x + 60 &&
+        player.collected.length === 4) {
+        levelComplete();
+    }
+
+    // Enemy movement & collision
+    if (player.invincible > 0) player.invincible--;
+
+    levelEnemies.forEach(en => {
+        en.x += en.speed * en.dir;
+        if (en.x > en.baseX + en.range || en.x < en.baseX) en.dir *= -1;
+
+        // Collision
+        if (player.invincible === 0 &&
+            player.x < en.x + 28 && player.x + player.w > en.x &&
+            player.y < en.y + 28 && player.y + player.h > en.y) {
+            // Stomp?
+            if (player.dy > 0 && player.y + player.h < en.y + 20) {
+                // Stomp enemy
+                en.x = -9999;
+                player.dy = -8;
+                score += 50;
+                spawnParticles(en.x, en.y, '#ff4444', 10);
+            } else {
+                takeDamage();
+            }
+        }
+    });
+
+    // Particles
+    particles = particles.filter(p => p.life > 0);
+    particles.forEach(p => {
+        p.x += p.vx; p.y += p.vy;
+        p.vy += 0.15;
+        p.life--;
+    });
+
+    // Anim
+    player.animTimer++;
+    if (player.animTimer > 8) { player.animFrame = (player.animFrame + 1) % 2; player.animTimer = 0; }
+
+    updateHUD();
+}
+
+function takeDamage() {
+    lives--;
+    player.invincible = 120;
+    spawnParticles(player.x + player.w/2, player.y, '#ff4444', 20);
+    if (lives <= 0) {
+        gameState = 'gameover';
+        document.getElementById('game-over').style.display = 'flex';
+    } else {
+        // Respawn
+        player.x = 80; player.y = 300;
+        player.dx = 0; player.dy = 0;
+        camera.x = 0;
+    }
+    updateHUD();
+}
+
+function levelComplete() {
+    gameState = 'levelcomplete';
+    const texts = [
+        "Hai scoperto le Libertà Personali: artt. 13, 14, 15 e 21!",
+        "Conosci i Diritti Sociali: famiglia, salute, scuola!",
+        "Sei un cittadino completo: conosci anche i tuoi Doveri!"
+    ];
+    document.getElementById('level-complete-text').textContent = texts[currentLevel] || "Livello superato!";
+    document.getElementById('level-complete').style.display = 'flex';
+}
+
+function nextLevel() {
+    document.getElementById('level-complete').style.display = 'none';
+    currentLevel++;
+    if (currentLevel >= LEVELS.length) {
+        showWin();
+    } else {
+        loadLevel(currentLevel);
+        gameState = 'playing';
+        requestAnimationFrame(loop);
+    }
+}
+
+function showWin() {
+    gameState = 'win';
+    const div = document.getElementById('collected-articles');
+    div.innerHTML = '';
+    totalArticlesCollected.forEach(id => {
+        const span = document.createElement('span');
+        span.className = 'article-pill';
+        span.textContent = `ART. ${id}`;
+        div.appendChild(span);
+    });
+    document.getElementById('win-screen').style.display = 'flex';
+}
+
+function restartLevel() {
+    document.getElementById('game-over').style.display = 'none';
+    lives = 3;
+    loadLevel(currentLevel);
+    gameState = 'playing';
+    requestAnimationFrame(loop);
+}
+
+function restartAll() {
+    document.getElementById('win-screen').style.display = 'none';
+    currentLevel = 0;
+    score = 0;
+    lives = 3;
+    totalArticlesCollected = [];
+    loadLevel(0);
+    gameState = 'playing';
+    requestAnimationFrame(loop);
+}
+
+// =============================================
+// MODAL
+// =============================================
+
+let modalCallback = null;
+let quizAnswered = false;
+
+function showModal(type, data) {
+    gameState = 'modal';
+    const overlay = document.getElementById('modal-overlay');
+    const badge = document.getElementById('modal-type-badge');
+    const title = document.getElementById('modal-title');
+    const content = document.getElementById('modal-content');
+    const quizSection = document.getElementById('quiz-section');
+    const contBtn = document.getElementById('modal-continue-btn');
+
+    quizAnswered = false;
+    quizSection.style.display = 'none';
+    contBtn.style.display = 'none';
+
+    if (type === 'article') {
+        badge.textContent = `📜 ARTICOLO ${data.id} DELLA COSTITUZIONE`;
+        badge.style.color = '#ffd700';
+        title.textContent = data.title;
+        content.textContent = data.text;
+
+        // Show quiz
+        if (data.quiz) {
+            quizSection.style.display = 'block';
+            document.getElementById('quiz-question').textContent = "❓ " + data.quiz.q;
+            const optDiv = document.getElementById('quiz-options');
+            optDiv.innerHTML = '';
+            data.quiz.options.forEach((opt, i) => {
+                const btn = document.createElement('button');
+                btn.className = 'quiz-option';
+                btn.textContent = opt;
+                btn.onclick = () => answerQuiz(i, data.quiz.correct, optDiv, btn);
+                optDiv.appendChild(btn);
+            });
+        } else {
+            contBtn.style.display = 'inline-block';
+        }
+    } else if (type === 'milestone') {
+        badge.textContent = data.badge || '⭐ PIETRA MILIARE';
+        badge.style.color = '#c8a000';
+        title.textContent = data.title;
+        content.textContent = data.text;
+        quizSection.style.display = 'none';
+        contBtn.style.display = 'inline-block';
+    }
+
+    overlay.style.display = 'flex';
+}
+
+function answerQuiz(chosen, correct, optDiv, clickedBtn) {
+    if (quizAnswered) return;
+    quizAnswered = true;
+    const btns = optDiv.querySelectorAll('.quiz-option');
+    btns.forEach((b, i) => {
+        b.style.pointerEvents = 'none';
+        if (i === correct) b.classList.add('correct');
+        else if (b === clickedBtn && chosen !== correct) b.classList.add('wrong');
+    });
+    if (chosen === correct) score += 50;
+    setTimeout(() => {
+        document.getElementById('modal-continue-btn').style.display = 'inline-block';
+    }, 600);
+}
+
+function closeModal() {
+    document.getElementById('modal-overlay').style.display = 'none';
+    gameState = 'playing';
+    requestAnimationFrame(loop);
+}
+
+// =============================================
+// DRAW
+// =============================================
+
+function draw() {
+    const lv = LEVELS[currentLevel];
+    const bg = lv.bg;
+
+    ctx.save();
+    ctx.translate(-camera.x, 0);
+
+    // Sky gradient
+    const skyGrad = ctx.createLinearGradient(camera.x, 0, camera.x, 390);
+    skyGrad.addColorStop(0, bg.sky);
+    skyGrad.addColorStop(1, shadeColor(bg.sky, -30));
+    ctx.fillStyle = skyGrad;
+    ctx.fillRect(camera.x, 0, 900, 390);
+
+    // Clouds
+    drawClouds();
+
+    // Decorative background elements
+    drawBackgroundDetails(lv);
+
+    // Platforms
+    lv.platforms.forEach(p => drawPlatform(p, bg));
+
+    // Articles
+    levelArticles.forEach(a => { if (!a.collected) drawArticle(a); });
+
+    // Milestone
+    if (!player.milestoneTriggered) drawMilestone(lv.milestone);
+
+    // Exit
+    drawExit(lv.exit, player.collected.length === 4);
+
+    // Enemies
+    levelEnemies.forEach(en => { if (en.x > -100) drawEnemy(en); });
+
+    // Particles
+    particles.forEach(p => {
+        ctx.globalAlpha = p.life / 30;
+        ctx.fillStyle = p.color;
+        ctx.fillRect(p.x - 3, p.y - 3, 6, 6);
+    });
+    ctx.globalAlpha = 1;
+
+    // Player
+    drawPlayer();
+
+    ctx.restore();
+
+    // Fixed UI: article requirement hint
+    if (player.collected.length < 4) {
+        const lv = LEVELS[currentLevel];
+        const ex = lv.exit;
+        const screenX = ex.x - camera.x;
+        if (screenX > 0 && screenX < 900) {
+            ctx.fillStyle = 'rgba(0,0,0,0.7)';
+            ctx.fillRect(screenX - 60, ex.y - 50, 120, 22);
+            ctx.fillStyle = '#ff8888';
+            ctx.font = '11px Cinzel, serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(`Raccogli ${4 - player.collected.length} articoli`, screenX, ex.y - 35);
+        }
+    }
+}
+
+function drawPlayer() {
+    const px = player.x;
+    const py = player.y;
+    const flash = player.invincible > 0 && Math.floor(player.invincible / 8) % 2 === 0;
+    if (flash) return;
+
+    ctx.save();
+    if (!player.facingRight) {
+        ctx.scale(-1, 1);
+        ctx.translate(-(px * 2 + player.w), 0);
+    }
+
+    // Body (tricolore suit)
+    // Legs
+    ctx.fillStyle = '#2a2a6a';
+    if (player.grounded) {
+        const legOffset = player.animFrame === 0 ? 2 : -2;
+        ctx.fillRect(px + 4, py + 18, 7, 12 + legOffset);
+        ctx.fillRect(px + 13, py + 18, 7, 12 - legOffset);
+    } else {
+        ctx.fillRect(px + 4, py + 18, 7, 12);
+        ctx.fillRect(px + 13, py + 18, 7, 12);
+    }
+
+    // Main body - tricolore
+    ctx.fillStyle = '#009246'; // green
+    ctx.fillRect(px + 2, py + 8, 8, 12);
+    ctx.fillStyle = '#ffffff'; // white
+    ctx.fillRect(px + 10, py + 8, 4, 12);
+    ctx.fillStyle = '#ce2b37'; // red
+    ctx.fillRect(px + 14, py + 8, 8, 12);
+
+    // Head
+    ctx.fillStyle = '#f5c8a0';
+    ctx.fillRect(px + 5, py + 0, 14, 12);
+
+    // Hair
+    ctx.fillStyle = '#5a2a00';
+    ctx.fillRect(px + 5, py, 14, 4);
+
+    // Eyes
+    ctx.fillStyle = '#1a1a1a';
+    ctx.fillRect(px + 8, py + 5, 2, 2);
+    ctx.fillRect(px + 14, py + 5, 2, 2);
+
+    // Arms
+    ctx.fillStyle = '#3a3a8a';
+    ctx.fillRect(px, py + 9, 5, 7);
+    ctx.fillRect(px + 19, py + 9, 5, 7);
+
+    ctx.restore();
+}
+
+function drawPlatform(p, bg) {
+    // Stone texture-like
+    const grad = ctx.createLinearGradient(p.x, p.y, p.x, p.y + p.h);
+    if (p.y > 380) {
+        grad.addColorStop(0, bg.ground);
+        grad.addColorStop(1, bg.accent);
+    } else {
+        grad.addColorStop(0, '#5a4a2a');
+        grad.addColorStop(1, '#3a2a10');
+    }
+    ctx.fillStyle = grad;
+    ctx.fillRect(p.x, p.y, p.w, p.h);
+
+    // Top highlight
+    ctx.fillStyle = 'rgba(255,220,100,0.2)';
+    ctx.fillRect(p.x, p.y, p.w, 3);
+
+    // Side shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+    ctx.fillRect(p.x, p.y + p.h - 3, p.w, 3);
+}
+
+function drawArticle(a) {
+    const pulse = Math.sin(animFrame * 0.08) * 4;
+    const y = a.y + pulse;
+
+    // Glow
+    ctx.shadowColor = '#ffd700';
+    ctx.shadowBlur = 10 + pulse;
+
+    // Scroll icon
+    ctx.fillStyle = '#c8a000';
+    ctx.fillRect(a.x - 2, y - 2, 34, 34);
+    ctx.fillStyle = '#ffd700';
+    ctx.fillRect(a.x, y, 30, 30);
+    ctx.fillStyle = '#8b6000';
+
+    // Draw "scroll" shape
+    ctx.fillStyle = '#f5e6c8';
+    ctx.fillRect(a.x + 3, y + 3, 24, 24);
+    ctx.fillStyle = '#8b4500';
+    ctx.fillRect(a.x + 3, y + 3, 24, 3);
+    ctx.fillRect(a.x + 3, y + 24, 24, 3);
+
+    // Lines representing text
+    ctx.fillStyle = '#5a3a00';
+    for (let i = 0; i < 3; i++) {
+        ctx.fillRect(a.x + 6, y + 8 + i * 5, 18, 2);
+    }
+
+    // Article number
+    ctx.font = 'bold 9px Cinzel, serif';
+    ctx.fillStyle = '#5a3a00';
+    ctx.textAlign = 'center';
+    ctx.fillText(`ART.${a.id}`, a.x + 15, y + 42);
+
+    ctx.shadowBlur = 0;
+}
+
+function drawMilestone(ms) {
+    const pulse = Math.sin(animFrame * 0.05) * 3;
+
+    // Star shape
+    ctx.shadowColor = '#ffaa00';
+    ctx.shadowBlur = 15;
+
+    ctx.fillStyle = '#c8a000';
+    ctx.fillRect(ms.x - 4, ms.y - 4, 48, 48);
+    ctx.fillStyle = '#ffcc00';
+    ctx.fillRect(ms.x, ms.y, 40, 40);
+
+    // Star
+    ctx.fillStyle = '#8b5000';
+    ctx.font = '24px serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('⭐', ms.x + 20, ms.y + 28);
+
+    ctx.font = 'bold 8px Cinzel, serif';
+    ctx.fillStyle = '#5a3a00';
+    ctx.fillText('PIETRA', ms.x + 20, ms.y + 48);
+    ctx.fillText('MILIARE', ms.x + 20, ms.y + 58);
+
+    ctx.shadowBlur = 0;
+}
+
+function drawExit(ex, active) {
+    // Porta / portale
+    const pulse = Math.sin(animFrame * 0.07);
+    ctx.strokeStyle = active ? `rgba(0,200,100,${0.7 + pulse * 0.3})` : 'rgba(100,100,100,0.5)';
+    ctx.lineWidth = 3;
+    ctx.fillStyle = active ? `rgba(0,100,50,${0.3 + pulse * 0.1})` : 'rgba(30,30,30,0.3)';
+
+    ctx.beginPath();
+    ctx.roundRect(ex.x, ex.y, 40, 60, [5, 5, 0, 0]);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = active ? '#00ff88' : '#666';
+    ctx.font = 'bold 10px Cinzel, serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(active ? 'ESCI' : 'BLOCCO', ex.x + 20, ex.y - 8);
+    ctx.fillText(active ? '→' : '🔒', ex.x + 20, ex.y + 35);
+}
+
+function drawEnemy(en) {
+    // Fascist figure (grey blocky antagonist)
+    const ex = en.x;
+    const ey = en.y;
+    const facingRight = en.dir > 0;
+
+    ctx.save();
+    if (!facingRight) {
+        ctx.scale(-1, 1);
+        ctx.translate(-(ex * 2 + 28), 0);
+    }
+
+    // Body
+    ctx.fillStyle = '#555555';
+    ctx.fillRect(ex + 4, ey + 8, 20, 14);
+
+    // Head
+    ctx.fillStyle = '#888888';
+    ctx.fillRect(ex + 6, ey, 16, 12);
+
+    // Black hat
+    ctx.fillStyle = '#222222';
+    ctx.fillRect(ex + 4, ey - 5, 20, 6);
+    ctx.fillRect(ex + 2, ey - 6, 24, 3);
+
+    // Eyes (menacing red)
+    ctx.fillStyle = '#ff2222';
+    ctx.fillRect(ex + 9, ey + 3, 3, 3);
+    ctx.fillRect(ex + 16, ey + 3, 3, 3);
+
+    // Legs
+    ctx.fillStyle = '#333333';
+    ctx.fillRect(ex + 5, ey + 22, 8, 8);
+    ctx.fillRect(ex + 15, ey + 22, 8, 8);
+
+    // Label
+    ctx.fillStyle = '#ff4444';
+    ctx.font = 'bold 7px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Nemici della costituzione', ex + 14, ey - 10);
+
+    ctx.restore();
+}
+
+function drawClouds() {
+    const cx = camera.x;
+    const cloudPositions = [
+        { x: 150 - cx * 0.2, y: 60, w: 80 },
+        { x: 420 - cx * 0.15, y: 40, w: 100 },
+        { x: 700 - cx * 0.25, y: 70, w: 70 },
+        { x: 900 - cx * 0.18, y: 50, w: 90 },
+        { x: 1150 - cx * 0.2, y: 35, w: 85 },
+    ];
+    ctx.fillStyle = 'rgba(255,255,255,0.7)';
+    cloudPositions.forEach(c => {
+        ctx.beginPath();
+        ctx.ellipse(c.x + camera.x * 0.2, c.y, c.w / 2, 20, 0, 0, Math.PI * 2);
+        ctx.ellipse(c.x + 25 + camera.x * 0.2, c.y - 10, c.w / 3, 25, 0, 0, Math.PI * 2);
+        ctx.ellipse(c.x - 25 + camera.x * 0.2, c.y - 5, c.w / 4, 18, 0, 0, Math.PI * 2);
+        ctx.fill();
+    });
+}
+
+function drawBackgroundDetails(lv) {
+    // Mountains / buildings silhouette
+    ctx.fillStyle = 'rgba(0,0,0,0.12)';
+    const buildings = [
+        [100, 200, 60, 190], [180, 230, 80, 160], [280, 180, 50, 210],
+        [370, 210, 70, 180], [500, 170, 55, 220], [600, 200, 90, 190],
+        [750, 185, 65, 205], [880, 215, 75, 175], [1000, 195, 55, 195],
+    ];
+    buildings.forEach(([x, y, w, h]) => {
+        // Shifted with parallax
+        const bx = x - camera.x * 0.3;
+        ctx.fillRect(bx, y, w, h);
+        // Window pattern
+        ctx.fillStyle = 'rgba(255,230,100,0.15)';
+        for (let wy = y + 15; wy < y + h - 15; wy += 20) {
+            for (let wx = bx + 8; wx < bx + w - 8; wx += 15) {
+                ctx.fillRect(wx, wy, 6, 8);
+            }
+        }
+        ctx.fillStyle = 'rgba(0,0,0,0.12)';
+    });
+}
+
+// =============================================
+// PARTICLES
+// =============================================
+
+function spawnParticles(x, y, color, count) {
+    for (let i = 0; i < count; i++) {
+        const angle = (Math.PI * 2 / count) * i + Math.random() * 0.5;
+        const speed = 1.5 + Math.random() * 3;
+        particles.push({
+            x, y,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed - 2,
+            color,
+            life: 25 + Math.floor(Math.random() * 15)
+        });
+    }
+}
+
+// =============================================
+// HUD
+// =============================================
+
+function updateHUD() {
+    const total = totalArticlesCollected.length + player.collected.length;
+    const unique = [...new Set(totalArticlesCollected.concat(player.collected))].length;
+    document.getElementById('articles-count').textContent = `📜 Articoli: ${unique} / 12`;
+    document.getElementById('score-display').textContent = `PUNTEGGIO: ${score}`;
+
+    const livesEl = document.getElementById('lives-display');
+    livesEl.textContent = '❤️'.repeat(Math.max(0, lives));
+}
+
+// =============================================
+// UTILS
+// =============================================
+
+function shadeColor(hex, amount) {
+    const num = parseInt(hex.replace('#', ''), 16);
+    const r = Math.max(0, Math.min(255, (num >> 16) + amount));
+    const g = Math.max(0, Math.min(255, ((num >> 8) & 0xff) + amount));
+    const b = Math.max(0, Math.min(255, (num & 0xff) + amount));
+    return `rgb(${r},${g},${b})`;
+}
+</script>
+</body>
+</html>
